@@ -1,52 +1,21 @@
-use actix_web::{get, http::StatusCode, test, web, App, HttpResponse, HttpServer, Responder};
+pub mod todo_api_web;
 
-#[get("/healthcheck")]
-pub async fn healthcheck() -> impl Responder {
-    HttpResponse::Ok().body("It's working!")
-}
+use actix_web::{web, App, HttpResponse, HttpServer};
+use todo_api_web::controller::{ping, readiness};
 
-#[get("/ping")]
-pub async fn ping() -> impl Responder {
-    HttpResponse::Ok().body("pong!")
-}
-
-#[get("/~/ready")]
-pub async fn readiness() -> impl Responder {
-    let process = std::process::Command::new("sh")
-        .arg("-c")
-        .arg("echo hello")
-        .output();
-    match process {
-        Ok(_) => HttpResponse::Accepted(),
-        Err(_) => HttpResponse::InternalServerError(),
-    }
-}
+use num_cpus;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(readiness)
-            .service(healthcheck)
+            .service(ping)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
-    .workers(6)
-    .bind(("localhost", 4000))?
+    .workers(num_cpus::get() + 2)
+    .bind(("localhost", 4004))
+    .unwrap()
     .run()
     .await
-}
-
-#[actix_web::test]
-async fn not_found_route() {
-    let mut app = test::init_service(
-        App::new()
-            .service(healthcheck)
-            .default_service(web::to(|| HttpResponse::NotFound())),
-    )
-    .await;
-
-    let req = test::TestRequest::with_uri("/crazy-path").to_request();
-
-    let resp = test::call_service(&mut app, req).await;
-    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 }
