@@ -1,4 +1,6 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, web, test, App, HttpResponse, HttpServer, Responder};
+use actix_web::dev::Service;
+use actix_web::http::StatusCode;
 
 #[get("/healthcheck")]
 pub async fn healthcheck() -> impl Responder {
@@ -20,7 +22,7 @@ async fn main() -> std::io::Result<()> {
 
 #[actix_web::test]
 async fn not_found_route() {
-    let mut app = test::init_service(
+    let app = test::init_service(
         App::new()
         .service(healthcheck)
         .default_service(web::to(|| HttpResponse::NotFound()))
