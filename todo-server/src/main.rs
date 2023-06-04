@@ -1,7 +1,7 @@
 pub mod todo_api_web;
 
 use actix_web::{web, App, HttpResponse, HttpServer};
-use todo_api_web::controller::{ping, readiness};
+use todo_api_web::controller::{ping, readiness, todo::create_todo};
 
 use num_cpus;
 
@@ -9,6 +9,7 @@ use num_cpus;
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
+            .service(web::scope("/api").service(create_todo))
             .service(readiness)
             .service(ping)
             .default_service(web::to(|| HttpResponse::NotFound()))
