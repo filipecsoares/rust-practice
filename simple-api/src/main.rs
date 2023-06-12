@@ -15,7 +15,7 @@ async fn main() {
     pretty_env_logger::init();
     let db = model::todo_db();
     let todo_router = warp::path!("api" / "todos");
-    
+    let todo_router_id = warp::path!("api" / "todos" / String);
     let health_checker = warp::path!("api" / "healthchecker" )
         .and(warp::get())
         .and_then(handler::health_checker_handler);
@@ -31,7 +31,13 @@ async fn main() {
             .and(with_db(db.clone()))
             .and_then(handler::todos_list_handler));
             
+    let todo_routes_id = todo_router_id
+            .and(warp::get())
+            .and(with_db(db.clone()))
+            .and_then(handler::get_todo_handler);
+            
     let routes = todo_routes.with(warp::log("api"))
+        .or(todo_routes_id)
         .or(health_checker);
     println!("Server started!");
     warp::serve(routes).run(([0, 0, 0, 0], 8000)).await;

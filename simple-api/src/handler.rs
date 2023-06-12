@@ -64,3 +64,24 @@ pub async fn create_todo_handler(mut body: Todo, db: DB) -> WebResult<impl Reply
 
     Ok(with_status(json(&json_response), StatusCode::CREATED))
 }
+
+pub async fn get_todo_handler(id: String, db: DB) -> WebResult<impl Reply> {
+    let vec = db.lock().await;
+
+    for todo in vec.iter() {
+        if todo.id == Some(id.to_owned()) {
+            let json_response = SingleTodoResponse {
+                status: "success".to_string(),
+                data: TodoData { todo: todo.clone() },
+            };
+
+            return Ok(with_status(json(&json_response), StatusCode::OK));
+        }
+    }
+
+    let error_response = GenericResponse {
+        status: "fail".to_string(),
+        message: format!("Todo with ID: {} not found", id),
+    };
+    return Ok(with_status(json(&error_response), StatusCode::NOT_FOUND));
+}
