@@ -32,9 +32,14 @@ async fn main() {
             .and_then(handler::todos_list_handler));
             
     let todo_routes_id = todo_router_id
+        .and(warp::patch())
+        .and(warp::body::json())
+        .and(with_db(db.clone()))
+        .and_then(handler::edit_todo_handler)
+        .or(todo_router_id
             .and(warp::get())
             .and(with_db(db.clone()))
-            .and_then(handler::get_todo_handler);
+            .and_then(handler::get_todo_handler));
             
     let routes = todo_routes.with(warp::log("api"))
         .or(todo_routes_id)
