@@ -9,8 +9,8 @@ pub struct Todo {
     pub title: String,
     pub content: String,
     pub completed: Option<bool>,
-    pub createdAt: Option<DateTime<Utc>>,
-    pub updatedAt: Option<DateTime<Utc>>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
 pub type DB = Arc<Mutex<Vec<Todo>>>;
