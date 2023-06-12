@@ -135,3 +135,20 @@ pub async fn edit_todo_handler(
 
     Ok(with_status(json(&error_response), StatusCode::NOT_FOUND))
 }
+
+pub async fn delete_todo_handler(id: String, db: DB) -> WebResult<impl Reply> {
+    let mut vec = db.lock().await;
+
+    for todo in vec.iter_mut() {
+        if todo.id == Some(id.clone()) {
+            vec.retain(|todo| todo.id != Some(id.to_owned()));
+            return Ok(with_status(json(&""), StatusCode::NO_CONTENT));
+        }
+    }
+
+    let error_response = GenericResponse {
+        status: "fail".to_string(),
+        message: format!("Todo with ID: {} not found", id),
+    };
+    Ok(with_status(json(&error_response), StatusCode::NOT_FOUND))
+}
