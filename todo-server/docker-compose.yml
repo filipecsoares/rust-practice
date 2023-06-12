@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: amazon/dynamodb-local
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: cargo run
+    ports:
+      - "4000:4000"
+    depends_on:
+      - "dynamodb-local"
+    links:
+      - "dynamodb-local"
+    environment:
+      # Since we are using dynamodb local, the IAM authentication mechanism is not used at all. 
+      # That is, whichever credentials you provide, it will be accepted
+      AWS_ACCESS_KEY_ID: 'MYID'
+      AWS_SECRET_ACCESS_KEY: 'MYSECRET'
+      AWS_REGION: 'us-east-1'
+      DYNAMODB_ENDPOINT: 'dynamodb-local'
+      DATABASE_URL: 'postgres://auth:secret@postgres:5432/auth_db'
+  postgres:
+    container_name: "postgres"
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: 'auth'
+      POSTGRES_PASSWORD: 'secret'
+      POSTGRES_DB: 'auth_db'
+      PGUSER: 'postgres'
