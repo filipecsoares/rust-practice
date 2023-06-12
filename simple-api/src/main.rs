@@ -21,10 +21,15 @@ async fn main() {
         .and_then(handler::health_checker_handler);
     
     let todo_routes = todo_router
+        .and(warp::post())
+        .and(warp::body::json())
+        .and(with_db(db.clone()))
+        .and_then(handler::create_todo_handler)
+        .or(todo_router
             .and(warp::get())
             .and(warp::query::<QueryOptions>())
             .and(with_db(db.clone()))
-            .and_then(handler::todos_list_handler);
+            .and_then(handler::todos_list_handler));
             
     let routes = todo_routes.with(warp::log("api"))
         .or(health_checker);
