@@ -3,7 +3,7 @@ mod model;
 mod response;
 
 use model::{QueryOptions, DB};
-use warp::{Filter, Rejection};
+use warp::{http::Method, Filter, Rejection};
 
 type WebResult<T> = std::result::Result<T, Rejection>;
 
@@ -19,6 +19,12 @@ async fn main() {
     let health_checker = warp::path!("api" / "healthchecker" )
         .and(warp::get())
         .and_then(handler::health_checker_handler);
+        
+    let cors = warp::cors()
+        .allow_methods(&[Method::GET, Method::POST, Method::PATCH, Method::DELETE])
+        .allow_origins(vec!["http://localhost:3000/", "http://localhost:8000/"])
+        .allow_headers(vec!["content-type"])
+        .allow_credentials(true);
     
     let todo_routes = todo_router
         .and(warp::post())
@@ -45,7 +51,9 @@ async fn main() {
             .and(with_db(db.clone()))
             .and_then(handler::delete_todo_handler));
             
-    let routes = todo_routes.with(warp::log("api"))
+    let routes = todo_routes
+        .with(cors)
+        .with(warp::log("api"))
         .or(todo_routes_id)
         .or(health_checker);
     println!("Server started!");
