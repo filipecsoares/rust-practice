@@ -7,11 +7,14 @@ use chrono::prelude::*;
 use uuid::Uuid;
 use warp::{http::StatusCode, reply::json, reply::with_status, Reply};
 
+const SUCCESS: &str = "success";
+const FAIL: &str = "fail";
+
 pub async fn health_checker_handler() -> WebResult<impl Reply> {
     const MESSAGE: &str = "Simple CRUD API with Rust";
     let response_json = &GenericResponse {
-        status: "success".to_string(),
-        message: MESSAGE.to_string(),    
+        status: SUCCESS.to_string(),
+        message: MESSAGE.to_string(),
     };
     Ok(json(response_json))
 }
@@ -25,7 +28,7 @@ pub async fn todos_list_handler(opts: QueryOptions, db: DB) -> WebResult<impl Re
     let todos: Vec<Todo> = todos.clone().into_iter().skip(offset).take(limit).collect();
 
     let json_response = TodoListResponse {
-        status: "success".to_string(),
+        status: SUCCESS.to_string(),
         results: todos.len(),
         todos,
     };
@@ -38,7 +41,7 @@ pub async fn create_todo_handler(mut body: Todo, db: DB) -> WebResult<impl Reply
     for todo in vec.iter() {
         if todo.title == body.title {
             let error_response = GenericResponse {
-                status: "fail".to_string(),
+                status: FAIL.to_string(),
                 message: format!("Todo with title: '{}' already exists", todo.title),
             };
             return Ok(with_status(json(&error_response), StatusCode::CONFLICT));
@@ -58,7 +61,7 @@ pub async fn create_todo_handler(mut body: Todo, db: DB) -> WebResult<impl Reply
     vec.push(body);
 
     let json_response = SingleTodoResponse {
-        status: "success".to_string(),
+        status: SUCCESS.to_string(),
         data: TodoData { todo },
     };
 
@@ -71,7 +74,7 @@ pub async fn get_todo_handler(id: String, db: DB) -> WebResult<impl Reply> {
     for todo in vec.iter() {
         if todo.id == Some(id.to_owned()) {
             let json_response = SingleTodoResponse {
-                status: "success".to_string(),
+                status: SUCCESS.to_string(),
                 data: TodoData { todo: todo.clone() },
             };
 
@@ -80,7 +83,7 @@ pub async fn get_todo_handler(id: String, db: DB) -> WebResult<impl Reply> {
     }
 
     let error_response = GenericResponse {
-        status: "fail".to_string(),
+        status: FAIL.to_string(),
         message: format!("Todo with ID: {} not found", id),
     };
     return Ok(with_status(json(&error_response), StatusCode::NOT_FOUND));
@@ -121,7 +124,7 @@ pub async fn edit_todo_handler(
             *todo = payload;
 
             let json_response = SingleTodoResponse {
-                status: "success".to_string(),
+                status: SUCCESS.to_string(),
                 data: TodoData { todo: todo.clone() },
             };
             return Ok(with_status(json(&json_response), StatusCode::OK));
@@ -129,7 +132,7 @@ pub async fn edit_todo_handler(
     }
 
     let error_response = GenericResponse {
-        status: "fail".to_string(),
+        status: FAIL.to_string(),
         message: format!("Todo with ID: {} not found", id),
     };
 
@@ -147,7 +150,7 @@ pub async fn delete_todo_handler(id: String, db: DB) -> WebResult<impl Reply> {
     }
 
     let error_response = GenericResponse {
-        status: "fail".to_string(),
+        status: FAIL.to_string(),
         message: format!("Todo with ID: {} not found", id),
     };
     Ok(with_status(json(&error_response), StatusCode::NOT_FOUND))
