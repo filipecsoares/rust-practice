@@ -3,29 +3,30 @@ mod model;
 mod response;
 
 use model::{QueryOptions, DB};
+use std::env;
 use warp::{http::Method, Filter, Rejection};
 
 type WebResult<T> = std::result::Result<T, Rejection>;
 
 #[tokio::main]
 async fn main() {
-    if std::env::var_os("RUST_LOG").is_none() {
-        std::env::set_var("RUST_LOG", "api=info");
+    if env::var_os("RUST_LOG").is_none() {
+        env::set_var("RUST_LOG", "api=info");
     }
     pretty_env_logger::init();
     let db = model::todo_db();
     let todo_router = warp::path!("api" / "todos");
     let todo_router_id = warp::path!("api" / "todos" / String);
-    let health_checker = warp::path!("api" / "healthchecker" )
+    let health_checker = warp::path!("api" / "healthchecker")
         .and(warp::get())
         .and_then(handler::health_checker_handler);
-        
+
     let cors = warp::cors()
         .allow_methods(&[Method::GET, Method::POST, Method::PATCH, Method::DELETE])
         .allow_origins(vec!["http://localhost:3000/", "http://localhost:8000/"])
         .allow_headers(vec!["content-type"])
         .allow_credentials(true);
-    
+
     let todo_routes = todo_router
         .and(warp::post())
         .and(warp::body::json())
@@ -36,7 +37,7 @@ async fn main() {
             .and(warp::query::<QueryOptions>())
             .and(with_db(db.clone()))
             .and_then(handler::todos_list_handler));
-            
+
     let todo_routes_id = todo_router_id
         .and(warp::patch())
         .and(warp::body::json())
@@ -50,7 +51,7 @@ async fn main() {
             .and(warp::delete())
             .and(with_db(db.clone()))
             .and_then(handler::delete_todo_handler));
-            
+
     let routes = todo_routes
         .with(cors)
         .with(warp::log("api"))
