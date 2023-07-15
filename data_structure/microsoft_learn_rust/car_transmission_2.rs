@@ -57,18 +57,13 @@ enum Transmission {
 // Create a tuple for the car quality with the Age ("New" or "Used") and mileage
 // Return a tuple with the arrow `->` syntax
 fn car_quality(miles: u32) -> (Age, u32) {
-    // Declare and initialize the return tuple value
-    // For a new car, set the miles to 0
-    let age: Age;
+    // Corrected code: Check if car has accumulated miles
+    // Corrected code: Return tuple early for Used car
     if miles > 0 {
-        age = Age::Used;
-    } else {
-        age = Age::New
+        return (Age::Used, miles);
     }
-    let quality: (Age, u32) = (age, miles);
-
-    // Return the completed tuple to the caller
-    quality
+    // Corrected code: Return tuple for New car, no need for "return" keyword or semicolon
+    (Age::New, miles)
 }
 
 // Build a new "Car" using the values of four input arguments
@@ -79,13 +74,43 @@ fn car_quality(miles: u32) -> (Age, u32) {
 // Call the car_quality(miles) function to get the car age
 // Return an instance of a "Car" struct with the arrow `->` syntax
 fn car_factory(color: String, motor: Transmission, roof: bool, miles: u32) -> Car {
+    // Show details about car order
+    // Corrected code: If order is for Used car, check roof type, print details
+    // Corrected code: Else, order is for New car, check roof tye, print details
+    // Call the `println!` macro to show the car order details
+    if car_quality(miles).0 == Age::Used {
+        if roof {
+            println!(
+                "Preparing a used car: {:?}, {}, Hard top, {} miles",
+                motor, color, miles
+            );
+        } else {
+            println!(
+                "Preparing a used car: {:?}, {}, Convertible, {} miles",
+                motor, color, miles
+            );
+        }
+    } else {
+        if roof {
+            println!(
+                "Building a new car: {:?}, {}, Hard top, {} miles",
+                motor, color, miles
+            );
+        } else {
+            println!(
+                "Building a new car: {:?}, {}, Convertible, {} miles",
+                motor, color, miles
+            );
+        }
+    }
+
     // Create a new "Car" instance as requested
     // - Bind first three fields to values of input arguments
-    // - "age" field calls "car_quality" function with "miles" input argument
+    // - Bind "age" to tuple returned from car_quality(miles)
     Car {
         color: color,
         motor: motor,
         roof: roof,
-        age: car_quality(miles), // todo!("Replace `mileage: miles` with `age` tuple field, call `car_quality()` with `miles` as input argument");
+        age: car_quality(miles),
     }
 }
